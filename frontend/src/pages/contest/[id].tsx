@@ -19,15 +19,27 @@ export default function ContestPage() {
   const backend = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
 
   useEffect(() => {
-    if (id) {
-      axios.get(`${backend}/api/contests/${id}`).then((r) => {
-        const data: any = r.data as any;   // 👈 force the type
+  if (id) {
+    axios
+      .get<any>(`${backend}/api/contests/${id}`)
+      .then((r) => {
+        const data: any = r.data;
         setContest(data);
-        setSelectedProblem((data as any).problems[0] as any);
-});
-      refreshLeaderboard();
-    }
-  }, [id]);
+
+        // ✅ safe check before accessing index 0
+        if (data.problems && data.problems.length > 0) {
+          setSelectedProblem(data.problems[0]);
+        } else {
+          setSelectedProblem(null);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch contest:", err);
+      });
+
+    refreshLeaderboard();
+  }
+}, [id]);
 
   function refreshLeaderboard() {
   axios
